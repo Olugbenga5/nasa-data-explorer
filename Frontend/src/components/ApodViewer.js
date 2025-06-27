@@ -23,7 +23,7 @@ const ApodViewer = () => {
       setLoading(true);
       setError(null);
       setImageLoaded(false);
-      const endpoint = date ? `${BASE_URL}?date=${date}` : BASE_URL;
+      const endpoint = date ? `${BASE_URL}/api/nasa/apod?date=${date}` : `${BASE_URL}/api/nasa/apod`;
       const response = await axios.get(endpoint);
       setApods([response.data]);
     } catch (err) {
@@ -38,7 +38,7 @@ const ApodViewer = () => {
       setLoading(true);
       setError(null);
       setImageLoaded(false);
-      const response = await axios.get(`${BASE_URL}?count=1`);
+      const response = await axios.get(`${BASE_URL}/api/nasa/apod?count=1`);
       setApods([response.data[0]]);
     } catch (err) {
       setError('Failed to fetch a random APOD');
@@ -56,7 +56,7 @@ const ApodViewer = () => {
       const start = end.subtract(4, 'day');
 
       const response = await axios.get(
-        `${BASE_URL}?start_date=${start.format('YYYY-MM-DD')}&end_date=${end.format('YYYY-MM-DD')}`
+        `${BASE_URL}/api/nasa/apod?start_date=${start.format('YYYY-MM-DD')}&end_date=${end.format('YYYY-MM-DD')}`
       );
 
       if (!Array.isArray(response.data)) throw new Error("Unexpected data format");
