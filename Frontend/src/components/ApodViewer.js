@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import dayjs from 'dayjs';
 
-const BASE_URL = 'https://nasa-backend.onrender.com/api/nasa/apod';
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api/nasa/apod';
 
 const ApodViewer = () => {
   const [apods, setApods] = useState([]);
@@ -78,9 +78,9 @@ const ApodViewer = () => {
       setFavorites(updated);
       localStorage.setItem('apodFavorites', JSON.stringify(updated));
       setFeedbackMsg('Added to Favorites!');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      setTimeout(() => setFeedbackMsg(''), 3000);
     }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setTimeout(() => setFeedbackMsg(''), 2500);
   };
 
   const handleRemoveFromFavorites = (apod) => {
@@ -88,6 +88,7 @@ const ApodViewer = () => {
     setFavorites(updated);
     localStorage.setItem('apodFavorites', JSON.stringify(updated));
     setFeedbackMsg('Removed from Favorites');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     setTimeout(() => setFeedbackMsg(''), 2500);
   };
 
@@ -163,7 +164,6 @@ const ApodViewer = () => {
           </span>
         </div>
       )}
-
       {loading && (
         <div className="flex justify-center my-6">
           <div className="w-16 h-16 border-8 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
