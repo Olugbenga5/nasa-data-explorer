@@ -17,23 +17,27 @@ const ApodViewer = () => {
   const [selectedDate, setSelectedDate] = useState(dayjs().format('YYYY-MM-DD'));
   const [feedbackMsg, setFeedbackMsg] = useState('');
 
-  const fetchApod = async (date) => {
-    try {
-      setLoading(true);
-      setError(null);
-      setImageLoaded(false);
-      const endpoint = date
-        ? `${BASE_URL}/apod?date=${date}`
-        : `${BASE_URL}/apod`;
-      const response = await axios.get(endpoint);
-      setApods([response.data]);
-    } catch (err) {
-      console.error(err);
-      setError('Failed to fetch APOD data');
-    } finally {
-      setLoading(false);
+const fetchApod = async (date) => {
+  try {
+    setLoading(true);
+    setError(null);
+    setImageLoaded(false);
+    const endpoint = `${BASE_URL}/apod?date=${date}`;
+    const response = await axios.get(endpoint);
+    setApods([response.data]);
+  } catch (err) {
+    if (err.response?.status === 404) {
+      setError(`No APOD found for ${date}. Try another date.`);
+    } else if (err.response?.status === 500) {
+      setError(`NASA API error. Try a different date or later.`);
+    } else {
+      setError('Something went wrong while fetching APOD.');
     }
-  };
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const fetchRandomApod = async () => {
     try {
