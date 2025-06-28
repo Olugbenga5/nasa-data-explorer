@@ -2,7 +2,9 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import dayjs from 'dayjs';
 
-const BASE_URL = process.env.REACT_APP_API_BASE_URL || '';
+const BASE_URL = process.env.REACT_APP_API_BASE_URL;
+
+
 
 const ApodViewer = () => {
   const [apods, setApods] = useState([]);
@@ -12,6 +14,7 @@ const ApodViewer = () => {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [imageLoaded, setImageLoaded] = useState(false);
   const [mode, setMode] = useState('date');
   const [selectedDate, setSelectedDate] = useState(dayjs().format('YYYY-MM-DD'));
   const [feedbackMsg, setFeedbackMsg] = useState('');
@@ -20,11 +23,11 @@ const ApodViewer = () => {
     try {
       setLoading(true);
       setError(null);
-      const endpoint = `${BASE_URL}/api/nasa/apod?date=${date}`;
+      setImageLoaded(false);
+      const endpoint = date ? `${BASE_URL}?date=${date}` : BASE_URL;
       const response = await axios.get(endpoint);
       setApods([response.data]);
     } catch (err) {
-      console.error(err);
       setError('Failed to fetch APOD data');
     } finally {
       setLoading(false);
@@ -35,10 +38,10 @@ const ApodViewer = () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await axios.get(`${BASE_URL}/api/nasa/apod?count=1`);
+      setImageLoaded(false);
+      const response = await axios.get(`${BASE_URL}?count=1`);
       setApods([response.data[0]]);
     } catch (err) {
-      console.error(err);
       setError('Failed to fetch a random APOD');
     } finally {
       setLoading(false);
@@ -49,12 +52,16 @@ const ApodViewer = () => {
     try {
       setLoading(true);
       setError(null);
+      setImageLoaded(false);
       const end = dayjs().isAfter(dayjs(selectedDate)) ? dayjs(selectedDate) : dayjs();
       const start = end.subtract(4, 'day');
-      const url = `${BASE_URL}/api/nasa/apod?start_date=${start.format('YYYY-MM-DD')}&end_date=${end.format('YYYY-MM-DD')}`;
-      const response = await axios.get(url);
+
+      const response = await axios.get(
+        `${BASE_URL}?start_date=${start.format('YYYY-MM-DD')}&end_date=${end.format('YYYY-MM-DD')}`
+      );
 
       if (!Array.isArray(response.data)) throw new Error("Unexpected data format");
+
       setApods(response.data.reverse());
     } catch (err) {
       console.error('APOD history fetch error:', err);
@@ -62,17 +69,6 @@ const ApodViewer = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  useEffect(() => {
-    if (mode === 'date') fetchApod(selectedDate);
-    else if (mode === 'random') fetchRandomApod();
-    else if (mode === 'history') fetchApodHistory();
-  }, [mode, selectedDate]);
-
-  const handleDateChange = (e) => {
-    setSelectedDate(e.target.value);
-    setMode('date');
   };
 
   const handleAddToFavorites = (apod) => {
@@ -98,6 +94,17 @@ const ApodViewer = () => {
     setTimeout(() => setFeedbackMsg(''), 2500);
   };
 
+  useEffect(() => {
+    if (mode === 'date') fetchApod(selectedDate);
+    else if (mode === 'random') fetchRandomApod();
+    else if (mode === 'history') fetchApodHistory();
+  }, [mode, selectedDate]);
+
+  const handleDateChange = (e) => {
+    setSelectedDate(e.target.value);
+    setMode('date');
+  };
+
   const apodList = mode === 'favorites' ? favorites : apods;
 
   return (
@@ -107,46 +114,113 @@ const ApodViewer = () => {
           <h1 className="text-2xl md:text-3xl font-bold text-center md:text-left">
             NASA Astronomy Picture of the Day
           </h1>
+
           <div className="flex flex-wrap justify-center items-center gap-4">
             <input
               type="date"
               value={selectedDate}
               onChange={handleDateChange}
-              className="px-4 py-2 rounded-md text-sm text-gray-800 bg-white border border-gray-300"
+              className="px-4 py-2 rounded-md text-sm text-gray-800 bg-white border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400 shadow"
             />
-            <button onClick={() => setMode('random')} className={`px-5 py-2 rounded-md ${mode === 'random' ? 'bg-purple-600 text-white' : 'bg-white text-black'}`}>Random</button>
-            <button onClick={() => setMode('history')} className={`px-5 py-2 rounded-md ${mode === 'history' ? 'bg-green-600 text-white' : 'bg-white text-black'}`}>Last 5 Days</button>
-            <button onClick={() => setMode('favorites')} className={`px-5 py-2 rounded-md ${mode === 'favorites' ? 'bg-yellow-500 text-white' : 'bg-white text-black'}`}>Favorites</button>
+
+            <button
+              onClick={() => setMode('random')}
+              className={`px-5 py-2 rounded-md text-sm font-semibold transition duration-200 shadow ${
+                mode === 'random'
+                  ? 'bg-purple-700 text-white'
+                  : 'bg-white text-gray-800 hover:bg-purple-200'
+              }`}
+            >
+              Random
+            </button>
+
+            <button
+              onClick={() => setMode('history')}
+              className={`px-5 py-2 rounded-md text-sm font-semibold transition duration-200 shadow ${
+                mode === 'history'
+                  ? 'bg-green-600 text-white'
+                  : 'bg-white text-gray-800 hover:bg-green-200'
+              }`}
+            >
+              Last 5 Days
+            </button>
+
+            <button
+              onClick={() => setMode('favorites')}
+              className={`px-5 py-2 rounded-md text-sm font-semibold transition duration-200 shadow ${
+                mode === 'favorites'
+                  ? 'bg-yellow-500 text-white'
+                  : 'bg-white text-gray-800 hover:bg-yellow-200'
+              }`}
+            >
+              Favorites
+            </button>
           </div>
         </div>
       </div>
 
-      {feedbackMsg && <div className="text-center mb-6"><span>{feedbackMsg}</span></div>}
-      {loading && <div className="text-center my-6">Loading...</div>}
+      {feedbackMsg && (
+        <div className="text-center mb-6">
+          <span className="bg-green-100 text-green-800 px-4 py-2 rounded-md text-sm font-medium shadow-sm">
+            {feedbackMsg}
+          </span>
+        </div>
+      )}
+      {loading && (
+        <div className="flex justify-center my-6">
+          <div className="w-16 h-16 border-8 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      )}
       {error && <p className="text-red-500 text-center">{error}</p>}
 
       <div className="max-w-screen-xl mx-auto px-4 pb-12">
-        {!loading && apodList.map((apod, index) => (
-          <div key={apod.date || index} className="mb-12">
-            <div className="text-center mb-6 px-4">
-              <h2 className="text-3xl font-bold mb-4">{apod.title}</h2>
-              {apod.media_type === 'image' ? (
-                <img src={apod.url} alt={apod.title} className="mx-auto w-full max-w-4xl rounded-lg" />
-              ) : (
-                <iframe title="NASA Video" src={apod.url} allowFullScreen className="mx-auto w-full max-w-4xl h-96 rounded-lg" />
-              )}
+        {!loading &&
+          apodList.map((apod, index) => (
+            <div key={apod.date || index} className="mb-12">
+              <div className="text-center mb-6 px-4">
+                <h2 className="text-3xl font-bold mb-4">{apod.title}</h2>
+
+                {apod.media_type === 'image' ? (
+                  <img
+                    src={apod.url}
+                    alt={apod.title}
+                    className="mx-auto w-full max-w-4xl rounded-lg transition-opacity duration-1000 ease-in opacity-100"
+                    onLoad={() => setImageLoaded(true)}
+                  />
+                ) : (
+                  <iframe
+                    title="NASA Video"
+                    src={apod.url}
+                    allow="encrypted-media"
+                    allowFullScreen
+                    className="mx-auto w-full max-w-4xl h-96 rounded-lg transition-opacity duration-1000 ease-in opacity-100"
+                    onLoad={() => setImageLoaded(true)}
+                  />
+                )}
+              </div>
+
+              <div className="max-w-4xl mx-auto px-4">
+                <p className="text-gray-800 text-base leading-relaxed">{apod.explanation}</p>
+                <p className="mt-4 text-sm text-gray-600">{apod.date}</p>
+
+                {mode === 'favorites' ? (
+                  <button
+                    onClick={() => handleRemoveFromFavorites(apod)}
+                    className="mt-4 inline-block bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2 px-4 rounded"
+                  >
+                    Remove from Favorites
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => handleAddToFavorites(apod)}
+                    className="mt-4 inline-block bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded"
+                  >
+                    Save to Favorites
+                  </button>
+                )}
+              </div>
             </div>
-            <div className="max-w-4xl mx-auto px-4">
-              <p>{apod.explanation}</p>
-              <p className="mt-4 text-sm text-gray-600">{apod.date}</p>
-              {mode === 'favorites' ? (
-                <button onClick={() => handleRemoveFromFavorites(apod)} className="mt-4 bg-gray-300 text-black py-2 px-4 rounded">Remove from Favorites</button>
-              ) : (
-                <button onClick={() => handleAddToFavorites(apod)} className="mt-4 bg-red-500 text-white py-2 px-4 rounded">Save to Favorites</button>
-              )}
-            </div>
-          </div>
-        ))}
+          ))}
       </div>
     </div>
   );
