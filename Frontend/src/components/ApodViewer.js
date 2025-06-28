@@ -18,57 +18,58 @@ const ApodViewer = () => {
   const [selectedDate, setSelectedDate] = useState(dayjs().format('YYYY-MM-DD'));
   const [feedbackMsg, setFeedbackMsg] = useState('');
 
-  const fetchApod = async (date) => {
-    try {
-      setLoading(true);
-      setError(null);
-      setImageLoaded(false);
-      const endpoint = date ? `${BASE_URL}/api/nasa/apod?date=${date}` : `${BASE_URL}/api/nasa/apod`;
-      const response = await axios.get(endpoint);
-      setApods([response.data]);
-    } catch (err) {
-      setError('Failed to fetch APOD data');
-    } finally {
-      setLoading(false);
-    }
-  };
+const fetchApod = async (date) => {
+  try {
+    setLoading(true);
+    setError(null);
+    setImageLoaded(false);
+    const endpoint = date ? `${BASE_URL}?date=${date}` : `${BASE_URL}`;
+    const response = await axios.get(endpoint);
+    setApods([response.data]);
+  } catch (err) {
+    setError('Failed to fetch APOD data');
+  } finally {
+    setLoading(false);
+  }
+};
 
-  const fetchRandomApod = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      setImageLoaded(false);
-      const response = await axios.get(`${BASE_URL}/api/nasa/apod?count=1`);
-      setApods([response.data[0]]);
-    } catch (err) {
-      setError('Failed to fetch a random APOD');
-    } finally {
-      setLoading(false);
-    }
-  };
+const fetchRandomApod = async () => {
+  try {
+    setLoading(true);
+    setError(null);
+    setImageLoaded(false);
+    const response = await axios.get(`${BASE_URL}?count=1`);
+    setApods([response.data[0]]);
+  } catch (err) {
+    setError('Failed to fetch a random APOD');
+  } finally {
+    setLoading(false);
+  }
+};
 
-  const fetchApodHistory = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      setImageLoaded(false);
-      const end = dayjs().isAfter(dayjs(selectedDate)) ? dayjs(selectedDate) : dayjs();
-      const start = end.subtract(4, 'day');
+const fetchApodHistory = async () => {
+  try {
+    setLoading(true);
+    setError(null);
+    setImageLoaded(false);
+    const end = dayjs().isAfter(dayjs(selectedDate)) ? dayjs(selectedDate) : dayjs();
+    const start = end.subtract(4, 'day');
 
-      const response = await axios.get(
-        `${BASE_URL}/api/nasa/apod?start_date=${start.format('YYYY-MM-DD')}&end_date=${end.format('YYYY-MM-DD')}`
-      );
+    const response = await axios.get(
+      `${BASE_URL}?start_date=${start.format('YYYY-MM-DD')}&end_date=${end.format('YYYY-MM-DD')}`
+    );
 
-      if (!Array.isArray(response.data)) throw new Error("Unexpected data format");
+    if (!Array.isArray(response.data)) throw new Error("Unexpected data format");
 
-      setApods(response.data.reverse());
-    } catch (err) {
-      console.error('APOD history fetch error:', err);
-      setError('Failed to fetch APOD history. Try a more recent date.');
-    } finally {
-      setLoading(false);
-    }
-  };
+    setApods(response.data.reverse());
+  } catch (err) {
+    console.error('APOD history fetch error:', err);
+    setError('Failed to fetch APOD history. Try a more recent date.');
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const handleAddToFavorites = (apod) => {
     const exists = favorites.find((fav) => fav.date === apod.date);
