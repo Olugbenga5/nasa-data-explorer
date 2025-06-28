@@ -54,25 +54,33 @@ const fetchApod = async (date) => {
     }
   };
 
-  const fetchApodHistory = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      setImageLoaded(false);
-      const end = dayjs().isAfter(dayjs(selectedDate)) ? dayjs(selectedDate) : dayjs();
-      const start = end.subtract(4, 'day');
-      const url = `${BASE_URL}/apod?start_date=${start.format('YYYY-MM-DD')}&end_date=${end.format('YYYY-MM-DD')}`;
-      const response = await axios.get(url);
+const fetchApodHistory = async () => {
+  try {
+    setLoading(true);
+    setError(null);
+    setImageLoaded(false);
 
-      if (!Array.isArray(response.data)) throw new Error("Unexpected data format");
-      setApods(response.data.reverse());
-    } catch (err) {
-      console.error('APOD history fetch error:', err);
-      setError('Failed to fetch APOD history. Try a more recent date.');
-    } finally {
-      setLoading(false);
+    const end = dayjs().isAfter(dayjs(selectedDate)) ? dayjs(selectedDate) : dayjs();
+    const start = end.subtract(4, 'day');
+    const url = `${BASE_URL}/apod?start_date=${start.format('YYYY-MM-DD')}&end_date=${end.format('YYYY-MM-DD')}`;
+
+    const response = await axios.get(url);
+
+    if (!Array.isArray(response.data)) {
+      throw new Error("Unexpected data format");
     }
-  };
+
+    setApods(response.data.reverse());
+  } catch (err) {
+    console.error('APOD history fetch error:', err);
+
+    const fallback = dayjs(selectedDate).subtract(1, 'day').format('YYYY-MM-DD');
+    setError(`No APOD history for selected date. Try an earlier date like ${fallback}.`);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   useEffect(() => {
     if (mode === 'date') fetchApod(selectedDate);
