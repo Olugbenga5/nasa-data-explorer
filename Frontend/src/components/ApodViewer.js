@@ -4,8 +4,6 @@ import dayjs from 'dayjs';
 
 const BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
-
-
 const ApodViewer = () => {
   const [apods, setApods] = useState([]);
   const [favorites, setFavorites] = useState(() => {
@@ -24,10 +22,13 @@ const ApodViewer = () => {
       setLoading(true);
       setError(null);
       setImageLoaded(false);
-      const endpoint = date ? `${BASE_URL}?date=${date}` : BASE_URL;
+      const endpoint = date
+        ? `${BASE_URL}/apod?date=${date}`
+        : `${BASE_URL}/apod`;
       const response = await axios.get(endpoint);
       setApods([response.data]);
     } catch (err) {
+      console.error(err);
       setError('Failed to fetch APOD data');
     } finally {
       setLoading(false);
@@ -39,9 +40,10 @@ const ApodViewer = () => {
       setLoading(true);
       setError(null);
       setImageLoaded(false);
-      const response = await axios.get(`${BASE_URL}?count=1`);
+      const response = await axios.get(`${BASE_URL}/apod?count=1`);
       setApods([response.data[0]]);
     } catch (err) {
+      console.error(err);
       setError('Failed to fetch a random APOD');
     } finally {
       setLoading(false);
@@ -55,13 +57,10 @@ const ApodViewer = () => {
       setImageLoaded(false);
       const end = dayjs().isAfter(dayjs(selectedDate)) ? dayjs(selectedDate) : dayjs();
       const start = end.subtract(4, 'day');
-
-      const response = await axios.get(
-        `${BASE_URL}?start_date=${start.format('YYYY-MM-DD')}&end_date=${end.format('YYYY-MM-DD')}`
-      );
+      const url = `${BASE_URL}/apod?start_date=${start.format('YYYY-MM-DD')}&end_date=${end.format('YYYY-MM-DD')}`;
+      const response = await axios.get(url);
 
       if (!Array.isArray(response.data)) throw new Error("Unexpected data format");
-
       setApods(response.data.reverse());
     } catch (err) {
       console.error('APOD history fetch error:', err);
@@ -69,6 +68,17 @@ const ApodViewer = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  useEffect(() => {
+    if (mode === 'date') fetchApod(selectedDate);
+    else if (mode === 'random') fetchRandomApod();
+    else if (mode === 'history') fetchApodHistory();
+  }, [mode, selectedDate]);
+
+  const handleDateChange = (e) => {
+    setSelectedDate(e.target.value);
+    setMode('date');
   };
 
   const handleAddToFavorites = (apod) => {
@@ -94,17 +104,6 @@ const ApodViewer = () => {
     setTimeout(() => setFeedbackMsg(''), 2500);
   };
 
-  useEffect(() => {
-    if (mode === 'date') fetchApod(selectedDate);
-    else if (mode === 'random') fetchRandomApod();
-    else if (mode === 'history') fetchApodHistory();
-  }, [mode, selectedDate]);
-
-  const handleDateChange = (e) => {
-    setSelectedDate(e.target.value);
-    setMode('date');
-  };
-
   const apodList = mode === 'favorites' ? favorites : apods;
 
   return (
@@ -119,6 +118,7 @@ const ApodViewer = () => {
             <input
               type="date"
               value={selectedDate}
+              max={dayjs().format("YYYY-MM-DD")}
               onChange={handleDateChange}
               className="px-4 py-2 rounded-md text-sm text-gray-800 bg-white border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400 shadow"
             />
