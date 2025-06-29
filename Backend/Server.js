@@ -2,7 +2,8 @@ import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import nasaRoutes from './routes/nasaRoutes.js';
-import neoRoutes from './routes/neoRoutes.js';
+import { router as neoRoutes } from './routes/neoRoutes.js';
+
 
 
 
