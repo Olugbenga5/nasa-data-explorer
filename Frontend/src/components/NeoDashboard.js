@@ -1,96 +1,101 @@
-import React, { useEffect, useState } from 'react';
-import {BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer,} from 'recharts';
+  import React, { useEffect, useState } from 'react';
+  import axios from 'axios';
+  import {
+    BarChart,
+    Bar,
+    XAxis,
+    YAxis,
+    Tooltip,
+    CartesianGrid,
+    ResponsiveContainer,
+    LineChart,
+    Line,
+  } from 'recharts';
 
-const NeoDashboard = () => {
-  const [neoData, setNeoData] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const NeoDashboard = () => {
+    const [neoData, setNeoData] = useState([]);
+    const [error, setError] = useState('');
 
-  useEffect(() => {
-    const fetchNeoData = async () => {
-      try {
-        const response = await fetch('/api/neo-feed');
-        const data = await response.json();
+    useEffect(() => {
+      const fetchNeoData = async () => {
+        try {
+          const response = await axios.get(
+            `${process.env.REACT_APP_NEO_API_BASE_URL}/neo-feed`
+          );
+          const raw = response.data.near_earth_objects;
 
-        const formatted = Object.entries(data.near_earth_objects).map(
-          ([date, asteroids]) => {
-            const count = asteroids.length;
+          const formattedData = Object.keys(raw).map((date) => {
+            const neos = raw[date];
+            const count = neos.length;
             const avgDiameter =
-              asteroids.reduce((sum, neo) => {
+              neos.reduce((sum, neo) => {
                 const est = neo.estimated_diameter.kilometers;
-                const avg = (est.estimated_diameter_min + est.estimated_diameter_max) / 2;
-                return sum + avg;
+                return sum + (est.estimated_diameter_min + est.estimated_diameter_max) / 2;
               }, 0) / count;
 
             return {
               date,
               count,
-              avgDiameter: Number(avgDiameter.toFixed(3)),
+              avgDiameter: parseFloat(avgDiameter.toFixed(5)),
             };
-          }
-        );
+          });
 
-        setNeoData(formatted);
-        setLoading(false);
-      } catch (error) {
-        console.error('Error fetching NEO data:', error);
-        setLoading(false);
-      }
-    };
+          formattedData.sort((a, b) =>
+            new Date(a.date).getTime() - new Date(b.date).getTime()
+          );
 
-    fetchNeoData();
-  }, []);
+          setNeoData(formattedData);
+        } catch (err) {
+          console.error('Error fetching NEO data:', err);
+          setError('Failed to load asteroid data. Try again later.');
+        }
+      };
 
-  if (loading) {
+      fetchNeoData();
+    }, []);
+
     return (
-      <div className="flex justify-center items-center h-[300px]">
-        <p className="text-gray-600 text-lg">Loading asteroid data...</p>
+      <div className="px-8 py-6">
+        <h2 className="text-2xl font-bold text-center text-indigo-800 mb-2">
+          Near-Earth Objects (Past 7 Days)
+        </h2>
+        <p className="text-center text-gray-600 mb-6">
+          A breakdown of daily near-Earth asteroid observations detected by NASA.
+        </p>
+
+        {error && <p className="text-red-600 text-center font-semibold">{error}</p>}
+
+        {!error && (
+          <>
+            <h3 className="text-lg font-semibold text-center text-blue-700 mt-8 mb-4">
+              Asteroid Count Per Day
+            </h3>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={neoData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="date" />
+                <YAxis />
+                <Tooltip />
+                <Bar dataKey="count" fill="#8884d8" />
+              </BarChart>
+            </ResponsiveContainer>
+
+            <h3 className="text-lg font-semibold text-center text-blue-700 mt-10 mb-4">
+              Avg Asteroid Diameter (km)
+            </h3>
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={neoData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="date" />
+                <YAxis />
+                <Tooltip />
+                <Line type="monotone" dataKey="avgDiameter" stroke="#82ca9d" />
+              </LineChart>
+            </ResponsiveContainer>
+          </>
+        )}
       </div>
     );
-  }
+  };
 
-  return (
-    <div className="max-w-4xl mx-auto mt-10 p-4 sm:p-6 bg-white shadow-xl rounded-2xl border border-gray-200">
-      <h2 className="text-2xl sm:text-3xl font-bold text-indigo-700 mb-4 text-center">
-         Near-Earth Objects (Past 7 Days)
-      </h2>
-      <p className="text-sm sm:text-base text-gray-600 mb-6 text-center">
-        A breakdown of daily near-Earth asteroid observations detected by NASA.
-      </p>
-
-      <div className="mb-12">
-        <h3 className="text-lg sm:text-xl font-semibold text-indigo-700 mb-2 text-center">
-          Asteroid Count Per Day
-        </h3>
-        <ResponsiveContainer width="100%" height={window.innerWidth < 640 ? 200 : 300}>
-          <BarChart data={neoData}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="date" />
-            <YAxis allowDecimals={false} />
-            <Tooltip />
-            <Bar dataKey="count" fill="#6366f1" radius={[6, 6, 0, 0]} />
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
-
-      <div>
-        <h3 className="text-lg sm:text-xl font-semibold text-indigo-700 mb-2 text-center">
-           Avg Asteroid Diameter (km)
-        </h3>
-        <p className="text-sm text-gray-500 mb-4 text-center">
-          Based on the average of min and max estimated diameters.
-        </p>
-        <ResponsiveContainer width="100%" height={window.innerWidth < 640 ? 200 : 300}>
-          <BarChart data={neoData}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="date" />
-            <YAxis />
-            <Tooltip />
-            <Bar dataKey="avgDiameter" fill="#34d399" radius={[6, 6, 0, 0]} />
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
-    </div>
-  );
-};
-
-export default NeoDashboard;
+  export default NeoDashboard;
