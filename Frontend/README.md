@@ -1,4 +1,4 @@
-# NASA Data Explorer
+# NASA Data Explorer 
 
 An interactive full-stack web app built with React, Node.js, Express, and Tailwind CSS that allows users to:
 
@@ -49,34 +49,34 @@ postcss, autoprefixer
 
 ---
 
-Backend Setup
-cd Backend
-npm init -y
-npm install express axios dotenv cors
-npm install --save-dev nodemon
+Backend Setup  
+cd Backend  
+npm init -y  
+npm install express axios dotenv cors  
+npm install --save-dev nodemon  
 npm run dev  
 
-Frontend Setup
-cd frontend
-npm install
-npm install -D tailwindcss postcss autoprefixer
-npx tailwindcss init -p
+Frontend Setup  
+cd frontend  
+npm install  
+npm install -D tailwindcss postcss autoprefixer  
+npx tailwindcss init -p  
 
-Then in 'frontend/src/index.css', include Tailwind:
-css
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+Then in 'frontend/src/index.css', include Tailwind:  
+css  
+@tailwind base;  
+@tailwind components;  
+@tailwind utilities;  
 
-Start the frontend:
-npm start   
+Start the frontend:  
+npm run start   
 
 ---
 
 ## How It Works
 
 - Frontend makes requests to '/api/...' via proxy defined in 'frontend/package.json'
-- Backend handles communication with the NASA API using your API key
+- Backend handles communication with the NASA API using my API key
 - APOD and NEO data are fetched and visualized in React
 - Charts rendered with Recharts
 - Styling handled entirely with Tailwind CSS
@@ -85,9 +85,14 @@ npm start
 
 ##  Deployment
 
+Frontend (Vercel):  
+https://nasa-data-explorer-juniors-projects-0c911f33.vercel.app
+
+Backend (Render):  
+https://nasa-backend-vwru.onrender.com
 
 ---
 
 This project uses public data from NASA's Open APIs.  
-API Key used: 'lGVBgN4kfzBhWbbfFdjYlmu9RhQ8UUxDkbDfcgE9' 
+API Key used: 'lGVBgN4kfzBhWbbfFdjYlmu9RhQ8UUxDkbDfcgE9'  
 More info at: https://api.nasa.gov
