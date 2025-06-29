@@ -3,19 +3,13 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import nasaRoutes from './routes/nasaRoutes.js';
 import { router as neoRoutes } from './routes/neoRoutes.js';
-
-
-
-
 dotenv.config();
 
 const app = express();
 
-// Middleware
 app.use(cors());
 app.use(express.json());
 
-// Routes
 app.use('/api/nasa', nasaRoutes);
 app.use('/api',neoRoutes);
 
